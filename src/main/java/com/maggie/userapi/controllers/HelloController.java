@@ -1,4 +1,4 @@
-package com.maggie.userapi;
+package com.maggie.userapi.controllers;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
