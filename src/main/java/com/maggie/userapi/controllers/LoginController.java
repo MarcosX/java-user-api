@@ -10,8 +10,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-record LoginForm(String username, String password) { }
-record LoginResponse(String token) { }
+record LoginForm(String username, String password) {
+}
+
+record LoginResponse(String token) {
+}
 
 @RestController
 public class LoginController {
@@ -22,11 +25,15 @@ public class LoginController {
     @PostMapping("/login")
     @ResponseBody
     public LoginResponse login(@RequestBody LoginForm loginForm) {
+        if (loginForm.username() == null || loginForm.password() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+
         User user = userRepository.findByUsername(loginForm.username());
 
-        if (user!= null && loginForm.password().equals(user.getPassword())) {
+        if (user != null && loginForm.password().equals(user.getPassword())) {
             return new LoginResponse("token");
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
     }
 }
