@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-record LoginForm(String username, String password) {
+record LoginForm(String email, String password) {
 }
 
 record LoginResponse(String token, User user) {
@@ -27,11 +27,11 @@ public class LoginController {
     @PostMapping("/login")
     @ResponseBody
     public LoginResponse login(@RequestBody LoginForm loginForm) {
-        if (loginForm.username() == null || loginForm.password() == null) {
+        if (loginForm.email() == null || loginForm.password() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
 
-        User user = userRepository.findByUsername(loginForm.username());
+        User user = userRepository.findByEmail(loginForm.email());
 
         if (user != null && encoder.matches(loginForm.password(), user.getPassword())) {
             return new LoginResponse("token", user);
