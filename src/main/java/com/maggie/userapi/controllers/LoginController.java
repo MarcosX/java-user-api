@@ -14,7 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 record LoginForm(String username, String password) {
 }
 
-record LoginResponse(String token) {
+record LoginResponse(String token, User user) {
 }
 
 @RestController
@@ -22,6 +22,7 @@ public class LoginController {
     @Autowired
     UserRepository userRepository;
 
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     @PostMapping("/login")
     @ResponseBody
@@ -32,10 +33,8 @@ public class LoginController {
 
         User user = userRepository.findByUsername(loginForm.username());
 
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        
         if (user != null && encoder.matches(loginForm.password(), user.getPassword())) {
-            return new LoginResponse("token");
+            return new LoginResponse("token", user);
         }
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
     }
