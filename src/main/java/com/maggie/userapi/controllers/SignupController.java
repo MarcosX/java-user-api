@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 record SignupForm(String username, String email, String password) {
 }
 
-record SignupResponse(String token, User user) {
+record SignupResponse(String token, String username) {
 }
 
 @RestController
@@ -35,13 +35,13 @@ public class SignupController {
             // Email already being used
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
-        
+
         if (!emailPattern.matcher(signupForm.email()).matches()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
 
         String password = encoder.encode(signupForm.password());
         User newUser = userRepository.save(new User(signupForm.username(), signupForm.email(), password));
-        return new SignupResponse("token", newUser);
+        return new SignupResponse("token", newUser.getUsername());
     }
 }
