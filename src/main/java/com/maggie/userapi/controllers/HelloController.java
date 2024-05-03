@@ -2,9 +2,11 @@ package com.maggie.userapi.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -36,5 +38,23 @@ public class HelloController {
             }
         }
         return "Hello " + name + "!";
+    }
+
+    @GetMapping("/hello/token")
+    public String helloToken(@RequestHeader(value = "Authorization") String authHeader,
+            @RequestParam(value = "name", defaultValue = "World") String name) {
+        if (!authHeader.contains("Bearer\s")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            String token = authHeader.split(" ")[1];
+            DecodedJWT decodedJWT = jwtService.validateToken(token);
+
+            return "Hello " + name + "!" + " Your token has " + decodedJWT.getClaims() + "!";
+        } catch (JWTVerificationException exception) {
+            exception.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
     }
 }
