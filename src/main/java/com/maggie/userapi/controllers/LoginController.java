@@ -16,6 +16,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.maggie.userapi.models.User;
 import com.maggie.userapi.repositories.UserRepository;
+import com.maggie.userapi.session.JwtService;
 
 record LoginForm(String email, String password) {
 }
@@ -28,8 +29,8 @@ public class LoginController {
     @Autowired
     UserRepository userRepository;
 
-    @Value("${jwtsecret}")
-    String jwtSecret;
+    @Autowired
+    JwtService jwtService;
 
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -44,14 +45,7 @@ public class LoginController {
 
         if (user != null && encoder.matches(loginForm.password(), user.getPassword())) {
             try {
-                Instant now = Instant.now();
-                Algorithm algorithm = Algorithm.HMAC256(jwtSecret);
-                String token = JWT.create()
-                        .withClaim("sub", user.getEmail())
-                        .withClaim("name", user.getUsername())
-                        .withClaim("iat", now.getEpochSecond())
-                        .withClaim("exp", now.getEpochSecond() + 3600)
-                        .sign(algorithm);
+                String token = jwtService.generateToken(user.getEmail(), user.getUsername());
                 return new LoginResponse(token, user.getUsername());
             } catch (Exception exception) {
                 exception.printStackTrace();
