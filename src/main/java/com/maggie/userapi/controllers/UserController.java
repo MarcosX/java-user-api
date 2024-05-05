@@ -7,12 +7,17 @@ import com.maggie.userapi.repositories.UserRepository;
 import com.maggie.userapi.session.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.regex.Pattern;
+
 record UserResponse(String email, String username) {
+
+}
+
+record UpdateForm(String username, String password) {
 
 }
 
@@ -36,6 +41,47 @@ public class UserController {
                 User user = userRepository.findByEmail(email);
 
                 return new UserResponse(user.getEmail(), user.getUsername());
+
+            } catch (JWTVerificationException exception) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            }
+        }
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+    }
+
+    @PostMapping("/user")
+    public UserResponse updateUser(@RequestHeader(value = "Authorization") String authHeader, @RequestBody UpdateForm updateForm) {
+        if (authHeader.contains("Bearer")) {
+            String token = authHeader.split(" ")[1];
+            try {
+                DecodedJWT decodedJWT = jwtService.validateToken(token);
+
+                String email = decodedJWT.getSubject();
+
+                User userToBeUpdated = userRepository.findByEmail(email);
+
+                if (updateForm.username().trim().length() < 2) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username must have at least 2 characters.");
+                }
+
+                if (updateForm.password() != null && !updateForm.password().isEmpty()) {
+                    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+                    Pattern passwordPattern = Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,20}$");
+
+                    if (!passwordPattern.matcher(updateForm.password()).matches()) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must have minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character.");
+                    }
+
+                    String password = encoder.encode(updateForm.password());
+                    userToBeUpdated.setPassword(password);
+                }
+
+                userToBeUpdated.setUsername(updateForm.username());
+
+                userRepository.save(userToBeUpdated);
+
+                return new UserResponse(userToBeUpdated.getEmail(), userToBeUpdated.getUsername());
 
             } catch (JWTVerificationException exception) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
