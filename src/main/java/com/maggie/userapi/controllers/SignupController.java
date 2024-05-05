@@ -4,6 +4,7 @@ import com.maggie.userapi.models.User;
 import com.maggie.userapi.repositories.UserRepository;
 import com.maggie.userapi.session.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,10 +29,6 @@ public class SignupController {
     @PostMapping("/signup")
     @ResponseBody
     public SignupResponse signup(@RequestBody SignupForm signupForm) {
-        if (userRepository.findByEmail(signupForm.email()) != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already being used.");
-        }
-
         try {
             User newUser = userRepository.save(new User(signupForm.username(), signupForm.email(), signupForm.password()));
 
@@ -40,6 +37,8 @@ public class SignupController {
             return new SignupResponse(token, newUser.getUsername());
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage());
+        } catch (DuplicateKeyException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already being used.");
         }
     }
 }

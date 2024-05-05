@@ -1,17 +1,19 @@
 package com.maggie.userapi.models;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UserTests {
     @Test
     void createUser() {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
         User newUser = new User("Maggie", "maggie@email.com", "@Pass1234");
         assertEquals("Maggie", newUser.getUsername());
         assertEquals("maggie@email.com", newUser.getEmail());
-        assertEquals("@Pass1234", newUser.getPassword());
+        assertTrue(encoder.matches("@Pass1234", newUser.getPassword()));
     }
 
     @Test

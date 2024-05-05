@@ -1,6 +1,7 @@
 package com.maggie.userapi.models;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -12,13 +13,13 @@ public class User {
     @Id
     private String id;
     private String username;
+    @Indexed(unique = true)
     private String email;
     private String password;
-    
+
     static final String USERNAME_ERROR_MESSAGE = "Username must have at least 2 characters.";
     static final String PASSWORD_ERROR_MESSAGE = "Password must have minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character.";
     static final String EMAIL_ERROR_MESSAGE = "Invalid email format.";
-
 
     public User(String username, String email, String password) {
         if (username.trim().length() < 2) {
