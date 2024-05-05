@@ -4,6 +4,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.List;
+
 @Document("Users")
 public class User {
 
@@ -13,6 +15,7 @@ public class User {
     @Indexed(unique = true)
     private String email;
     private String password;
+    private List<String> activeSessions;
 
     public User(String username, String email, String password) {
         this.username = username;
@@ -42,5 +45,13 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public List<String> getActiveSessions() {
+        return activeSessions;
+    }
+
+    public void setActiveSessions(List<String> activeSessions) {
+        this.activeSessions = activeSessions;
     }
 }

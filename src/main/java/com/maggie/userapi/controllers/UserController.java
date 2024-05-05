@@ -40,8 +40,11 @@ public class UserController {
 
                 User user = userRepository.findByEmail(email);
 
-                return new UserResponse(user.getEmail(), user.getUsername());
+                if (!user.getActiveSessions().contains(token)) {
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+                }
 
+                return new UserResponse(user.getEmail(), user.getUsername());
             } catch (JWTVerificationException exception) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
             }
@@ -59,6 +62,10 @@ public class UserController {
                 String email = decodedJWT.getSubject();
 
                 User userToBeUpdated = userRepository.findByEmail(email);
+
+                if (!userToBeUpdated.getActiveSessions().contains(token)) {
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+                }
 
                 if (updateForm.username().trim().length() < 2) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username must have at least 2 characters.");

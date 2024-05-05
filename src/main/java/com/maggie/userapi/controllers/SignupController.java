@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 record SignupForm(String username, String email, String password) {
@@ -51,9 +53,15 @@ public class SignupController {
         }
         try {
             String password = encoder.encode(signupForm.password());
-            User newUser = userRepository.save(new User(signupForm.username(), signupForm.email(), password));
+            User newUser = new User(signupForm.username(), signupForm.email(), password);
 
             String token = jwtService.generateToken(newUser);
+
+            List<String> activeSessions = new ArrayList<>();
+            activeSessions.add(token);
+            newUser.setActiveSessions(activeSessions);
+
+            userRepository.save(newUser);
 
             return new SignupResponse(token, newUser.getUsername());
         } catch (DuplicateKeyException exception) {

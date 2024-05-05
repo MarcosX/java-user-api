@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+
 record LoginForm(String email, String password) {
 }
 
@@ -39,6 +41,11 @@ public class LoginController {
 
         if (user != null && encoder.matches(loginForm.password(), user.getPassword())) {
             String token = jwtService.generateToken(user);
+            if (user.getActiveSessions() == null) {
+                user.setActiveSessions(new ArrayList<>());
+            }
+            user.getActiveSessions().add(token);
+            userRepository.save(user);
             return new LoginResponse(token, user.getUsername());
         }
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
